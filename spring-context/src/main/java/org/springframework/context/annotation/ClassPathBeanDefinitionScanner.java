@@ -163,6 +163,11 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		this.registry = registry;
 
 		if (useDefaultFilters) {
+			/**
+			 * 注册spring扫描类过滤器
+			 * 加了特定注解的类会被扫描到
+			 * 带有@Component、@Repository、@Service、@Controller、@ManagedBean、@Named
+			 */
 			registerDefaultFilters();
 		}
 		setEnvironment(environment);
@@ -244,6 +249,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 
 
 	/**
+	 * 这个scanner就是默认构造函数初始化的ClassPathBeanDefinitionScanner，只有手动调用context.scan("com.yk.demo");这个初始化的scanner才有发挥的作用。
 	 * Perform a scan within the specified base packages.
 	 * @param basePackages the packages to check for annotated classes
 	 * @return number of beans registered
@@ -273,15 +279,38 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
+			/**
+			 * 扫描basePackage路径下的java文件
+			 *
+			 * 先全部转为Resource,然后再判断拿出符合条件的bd
+			 */
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 			for (BeanDefinition candidate : candidates) {
+				/**
+				 * 解析scope属性
+				 */
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
+				/**
+				 * 获取beanName
+				 * 先判断注解上有没有显示设置beanName
+				 * 没有的话，就以类名小写为beanName
+				 */
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
 				if (candidate instanceof AbstractBeanDefinition) {
+					/**
+					 * 如果这个类是AbstractBeanDefinition类型
+					 * 则为他设置默认值，比如lazy/init/destroy
+					 *
+					 * 通过扫描出来的bd是ScannedGenericBeanDefinition，实现了AbstractBeanDefinition
+					 */
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}
 				if (candidate instanceof AnnotatedBeanDefinition) {
+					/**
+					 * 处理加了注解的类
+					 * 把常用注解设置到AnnotationBeanDefinition中
+					 */
 					AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
 				}
 				if (checkCandidate(beanName, candidate)) {
@@ -289,6 +318,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
+					//注册beanDefinition
 					registerBeanDefinition(definitionHolder, this.registry);
 				}
 			}

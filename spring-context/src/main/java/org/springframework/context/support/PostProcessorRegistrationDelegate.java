@@ -97,7 +97,11 @@ final class PostProcessorRegistrationDelegate {
 			// Separate between BeanDefinitionRegistryPostProcessors that implement
 			// PriorityOrdered, Ordered, and the rest.
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
-
+			/**
+			 * getBean（）
+			 *  1.直接从容器中拿已经实例化的好的bean
+			 *  2.如果拿不到他就会从beanDefinition当中获取我们的beanDefinition对象然后把它实例化
+			 * */
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);

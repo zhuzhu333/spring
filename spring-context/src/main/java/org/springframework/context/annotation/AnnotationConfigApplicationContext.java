@@ -77,7 +77,24 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 */
 	public AnnotationConfigApplicationContext(DefaultListableBeanFactory beanFactory) {
 		super(beanFactory);
+		/**
+		 * 创建一个读取注解的Bean定义读取器
+		 * 什么是bean定义？BeanDefinition
+		 *
+		 * 完成了spring内部BeanDefinition的注册（主要是后置处理器）
+		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+		/**
+		 * 创建BeanDefinition扫描器
+		 * 可以用来扫描包或者类，继而转换为bd
+		 *
+		 * spring默认的扫描器其实不是这个scanner对象
+		 * 而是在后面自己又重新new了一个ClassPathBeanDefinitionScanner
+		 * spring在执行工程后置处理器ConfigurationClassPostProcessor时，去扫描包时会new一个ClassPathBeanDefinitionScanner
+		 *
+		 * 这里的scanner仅仅是为了程序员可以手动调用AnnotationConfigApplicationContext对象的scan方法
+		 *
+		 */
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -88,7 +105,9 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		//这里会将一些基础的beanFactoryProcessor装载到beanDefinitionMap中
 		this();
+		//处理注解
 		register(componentClasses);
 		refresh();
 	}
@@ -159,6 +178,11 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 * @see #scan(String...)
 	 * @see #refresh()
+	 */
+	/**
+	 * 注册一个或多个bean给容器
+	 * 比如有新加的类可以调用这个方法
+	 * 但是注册之后需要手动调用refresh方法
 	 */
 	@Override
 	public void register(Class<?>... componentClasses) {
